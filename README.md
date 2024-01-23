@@ -7,7 +7,7 @@ ArduiTouch is a touchscreen enclosure set made for wall mounting with NodeMCU or
 # NodeMCU-32S
 We tested ArduiTouch ESP with NodeMCU-32S, and here is how it is connected internally:
 
-![alt](https://github.com/Slaveche90/WeatherAppArduiTouch/blob/master/ConnectionDiagram.jpg?raw=true)
+![alt Connections](ConnectionDiagram.jpg?raw=true)
 
 # Setting up Arduino IDE
 
