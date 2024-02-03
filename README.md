@@ -67,7 +67,7 @@ and download .zip file. Then, to add it to the Arduino IDE, open Arduino IDE and
 The fifth library is for converting timestamps, called “TimeLib”. You can not find this library in the Manage Libraries. We have to download it from the GitHub. Go on this link: https://github.com/PaulStoffregen/Time 
 and download .zip file. Then, to add it to the Arduino IDE, open Arduino IDE and go to Sketch > Include Library > Add .ZIP Library… and add the downloaded .zip file.
 
-# Contorlling the screen
+# Controlling the screen
 
 In order to turn ON the screen and the following lines of code at the beginning of setup() function:
 ```
