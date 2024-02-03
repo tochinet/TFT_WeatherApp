@@ -1,5 +1,5 @@
-# WeatherAppArduiTouch
-App for showing time, date, weather and moon phases with ArduiTouch and NodeMCU-32S
+# WeatherApp for the ArduiTouch ESP+Touchscreen enclosure
+Arduino sketch for showing time, date, weather and moon phases with ArduiTouch and NodeMCU-32S
 
 # ArduiTouch ESP
 ArduiTouch is a touchscreen enclosure set made for wall mounting with NodeMCU or Wemos D1 Mini boards based on ESP8266 or ESP32 platforms.
@@ -24,9 +24,10 @@ For this library you have to edit one file. Go to directory where Arduino IDE sa
 Documents > Arduino > libraries > TFT_eSPI 
 
 We have to edit file called “User_Setup.h”. Open it in any text editor (for example Notepad or Sublime Text). 
-Find following lines of the text (at 156 line number):
+Find following lines of the text (at line number 207 as of February 2024):
 ```
-// ###### EDIT THE PIN NUMBERS IN THE LINES FOLLOWING TO SUIT YOUR ESP32 SETUP   
+// ###### EDIT THE PIN NUMBERS IN THE LINES FOLLOWING TO SUIT YOUR ESP32 SETUP
+   
 // For ESP32 Dev board (only tested with ILI9341 display)
 // The hardware SPI can be mapped to any pins
 //#define TFT_MISO		19
@@ -35,10 +36,9 @@ Find following lines of the text (at 156 line number):
 //#define TFT_CS		15	// Chip select control pin
 //#define TFT_DC		2	// Data Command control pin
 //#define TFT_RST		4	// Reset pin (could connect to RST pin)
-//#define TFT_RST		-1	// Set TFT_RST to -1 if display RESET is 
-							// connected to ESP32 board RST
-//#define TFT_BL		32	// LED back-light 
-							// (only for ST7789 with backlight control pin)
+//#define TFT_RST		-1	// Set TFT_RST to -1 if display RESET is  connected to ESP32 board RST
+
+...
 //#define TOUCH_CS		21	// Chip select pin (T_CS) of touch screen
 //#define TFT_WR		22	// Write strobe for modified Raspberry Pi TFT only
 ```
@@ -50,16 +50,13 @@ and change it to this:
 #define TFT_CS			5   
 #define TFT_DC			4   
 #define TFT_RST			22  
-//#define TFT_RST		-1  
-//#define TFT_BL		32  
 #define TOUCH_CS		14     
-//#define TFT_WR		22  
 ```  
 After this, save the file. We need to make these changes because pins of the TFT LCD screen are connected to pins of the NodeMCU-32S like in the changed text (you can see it on the connection diagram). Backlight pin is controlled separately, so we do not set-up it here.
 
 The second library is for Real Time API called "NTPClient". Open Arduino IDE, and go to Tools > Manage Libraries. Type "NTP" in the search box and install library “NTPClient” by “Fabrice Wenberg”.
 
-The third library is for parsing JSON data, it is called “ArduinoJson”. Open Arduino IDE, and go to Tools > Manage Libraries. Type the name of the library in the search box and install library “ArduinoJson” by “Benoit Blanchon”.
+The third library is for parsing JSON data, it is called “ArduinoJson”. Open Arduino IDE, and go to Tools > Manage Libraries. Type the name of the library in the search box and install library “ArduinoJson” by “Benoit Blanchon”. there are several incompatible versions of the library, be sure to download a version 6.xx.
 
 The fourth library is for Moon Phase API, called “moonPhases”. You can not find this library in the Manage Libraries. We have to download it from the GitHub. Go on this link: https://github.com/CelliesProjects/moonPhase
 and download .zip file. Then, to add it to the Arduino IDE, open Arduino IDE and go to Sketch > Include Library > Add .ZIP Library… and add the downloaded .zip file.
