@@ -1,21 +1,81 @@
+/*******
+ * Thermostat with WeatherApp for AZ-Touch MOD with ESP32 
+ * Copyright (c) 2024, Tochinet https://github.com/tochinet/TFT_WeatherApp  
+ * MIT licence  https://opensource.org/license/MIT/
+ * forked from https://github.com/pdemeyer/WeatherAppArduiTouch
+ * using the great TFT_eSPI library from BodMer
+ * 
+ * Many benefits from original sketch
+ *  [v] w/ OpenWeatherMap interface to get weather predictions
+ *  [v] w/ TFT_eSPI for better performance 
+ *  [v] w/ 70x70 weather icons and 60x60 moon phases
+ *  [v] NTP client for precise time 
+ *  
+ * Some features missing from original sketch
+ *  [v] add touch library
+ *  [%] add touch reconnaissance
+ *  [ ] go fo horizontal layout
+ *  
+ * Some modifications from original sketch
+ *  [v] reformat verbose ico selection
+ *  [v] clean several helper functions
+ *  
+ * Still many needed additions 
+ *  [ ] add ThingSpeak / GroveStreams from OWM sketch
+ *  [ ] add DHT22 internally for local temp/hum sensing
+ *  [ ] add CC1101 on SPI for communication with HVAC system (step 1)
+ *  [ ] add CANBUS driver for communication with HVAC system (step 2)
+ *  [ ] add DS18B20 Dallas OneWire for remote sensing (fireplace)
+ *  [ ] replace modbus by Domintell listener (step 1)/ambiance (step 2)
+ *  [ ] add ML/RL algorithm for intelligence
+ *  
+ * 
+ *  This program is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License
+ *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ * 
+ ******************************************************************* 
+ * Requires manual selection of modified User Setup42.h for TFT_eSPI
+ *******************************************************************
+ */
+
+#include <TimeLib.h>      // for converting timestamps, etc. (including detection of unset clock)
 #include "SPI.h"          // for communication with the TFT LCD screen
 #include "TFT_eSPI.h"     // for TFT LCD screen register
 #include <ArduinoJson.h>  // for parsing JSON files
-#include <WiFi.h>         // for connecting to the local WiFi network
-#include <WiFiClient.h>   // for accessing NTP real time API data
-#include <TimeLib.h>      // for converting timestamps
+//#include <ESP8266WiFi.h>  // for connecting to the local WiFi network (ESP8266 only)
+#include <WiFi.h>         // for connecting to the local WiFi network (ESP32 only)
+#include <WiFiClient.h>   // for accessing external web sites
 #include <NTPClient.h>    // for accessing NTP real time API data
 #include <WiFiUdp.h>      // needed for the library NTPClient.h
 #include <moonPhase.h>    // for accessing Moon Phases API data
 #include "xbm.h"          // for weather icon images in xbm.h file
 #include "moonPhs.h"      // for moon icon images in moonPhs.h file
+#include "parameters.h"   // WiFi ssid, password etc. in separate local file
 
-// variables for updating data
-unsigned long second_interval = 1000;   // one second in milliseconds
-unsigned long weather_interval = 3600;  // read weather data every 3600 seconds (every hour)
-unsigned long counter = 0;              // for counting the seconds
-unsigned long time_T;                   // current time from millis()
-unsigned long last_update_second = 0;
+// global variables
+uint8_t seconds, minutes, hours = 0;    // for counting second and minutes
+unsigned long lastMillis = 0;
+String text; // String for JSON parsing // TODO investigate need for global
+int X,Y;    // Touch position
+
+uint8_t Thermostat_mode = BOOT;
+uint8_t SolarMode = NOSUN;         // program mode
+bool Touch_pressed = false;
+uint8_t screenTimer = 255;
+
+uint8_t iFan_level = 0;
+uint8_t iRoom_temperature = 21; // before real temp is acquired
+uint8_t iSet_temperature = 20;
 
 // objects used for getting data from moon phases API
 moonPhase myMoonPhase;
@@ -23,20 +83,21 @@ moonData_t currentMoon;
 
 // char arrays for connecting to the wifi
 // Replace with your SSID and password details
-char ssid[] = "wifi_ssid"; // your_wifi_network_name
-char pass[] = "wifi_password"; // your_wifi_network_password
+// char ssid[] = "wifi_ssid"; // your_wifi_network_name
+// char pass[] = "wifi_password"; // your_wifi_network_password
 
 String text; // String for JSON parsing
 
-// objects used for getting data from NTP real time API
+// global objects
+TFT_eSPI dsply = TFT_eSPI(); // TFT LCD screen object
 WiFiClient client;
 WiFiUDP ntpUDP;
 NTPClient timeClient(ntpUDP);
 
 // Open Weather Map API server name
 const char server[] = "api.openweathermap.org"; // server name
-String nameOfCity = "Deggendorf,DE"; // city name and country code
-String apiKey = "your_api_key"; // key that you get when you register on the OWM site // your_API_key
+// String nameOfCity = "Deggendorf,DE"; // city name and country code
+// String apiKey = "your_api_key"; // key that you get when you register on the OWM site // your_API_key
 
 // macro and variables used for parsing JSON data
 #define JSON_BUFF_DIMENSION 2500
